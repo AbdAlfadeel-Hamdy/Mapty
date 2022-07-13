@@ -58,6 +58,9 @@ class App {
   #mapZoomLevel = 13;
   constructor() {
     this._getPosition();
+    this._getLocalStorage();
+
+    // Attach event handlers
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
@@ -83,12 +86,15 @@ class App {
     }).addTo(this.#map);
     // Handling clicks on map
     this.#map.on('click', this._showForm.bind(this));
+    this.#workouts.forEach(work => this._renderWorkoutMarker(work));
   }
+
   _showForm(mapE) {
     this.#mapEvent = mapE;
     form.classList.remove('hidden');
     inputDistance.focus();
   }
+
   _hideForm() {
     // Clear inputs
     inputDistance.value =
@@ -101,10 +107,12 @@ class App {
     form.classList.add('hidden');
     setTimeout(() => (form.style.display = 'grid'), 1000);
   }
+
   _toggleElevationField() {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
     inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
   }
+
   _newWorkout(e) {
     e.preventDefault();
 
@@ -155,7 +163,11 @@ class App {
 
     // Hide form + Clear input fields
     this._hideForm();
+
+    // Set local storage
+    this._setLocalStorage();
   }
+
   _renderWorkoutMarker(workout) {
     // Display marker
     L.marker(workout.coords)
@@ -174,6 +186,7 @@ class App {
       )
       .openPopup();
   }
+
   _renderWorkout(workout) {
     let html = `
     <li class="workout workout--${workout.type}" data-id="${workout.id}">
@@ -217,6 +230,7 @@ class App {
 </li>`;
     form.insertAdjacentHTML('afterend', html);
   }
+
   _moveToPopup(e) {
     const workoutEl = e.target.closest('.workout');
     if (!workoutEl) return;
@@ -228,6 +242,21 @@ class App {
         duration: 1,
       },
     });
+  }
+
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+    if (!data) return;
+    this.#workouts = data;
+    this.#workouts.forEach(work => this._renderWorkout(work));
+  }
+  reset() {
+    localStorage.removeItem('workouts');
+    location.reload();
   }
 }
 
