@@ -64,6 +64,7 @@ class App {
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
+    containerWorkouts.addEventListener('click', this._deleteWorkout.bind(this));
   }
 
   _getPosition() {
@@ -215,6 +216,7 @@ class App {
     <span class="workout__value">${workout.cadence}</span>
     <span class="workout__unit">spm</span>
   </div>
+  <span class="close__btn">&times;</span>
 </li>`;
     if (workout.type === 'cycling')
       html += `<div class="workout__details">
@@ -227,11 +229,14 @@ class App {
     <span class="workout__value">${workout.elevationGain}</span>
     <span class="workout__unit">m</span>
   </div>
+  <span class="close__btn">&times;</span>
 </li>`;
     form.insertAdjacentHTML('afterend', html);
   }
 
   _moveToPopup(e) {
+    if (e.target.classList.contains('close__btn')) return;
+
     const workoutEl = e.target.closest('.workout');
     if (!workoutEl) return;
 
@@ -253,6 +258,19 @@ class App {
     if (!data) return;
     this.#workouts = data;
     this.#workouts.forEach(work => this._renderWorkout(work));
+  }
+  _deleteWorkout(e) {
+    const btn = e.target.closest('.close__btn');
+    if (!btn) return;
+    const workoutEl = e.target.closest('.workout');
+    if (!workoutEl) return;
+    const workoutIndex = this.#workouts.findIndex(
+      w => w.id === workoutEl.dataset.id
+    );
+    this.#workouts.splice(workoutIndex, 1);
+    this._setLocalStorage();
+    location.reload();
+    this._getLocalStorage();
   }
   reset() {
     localStorage.removeItem('workouts');
